@@ -50,7 +50,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Server bot WBC detection sedang berjalan"
+    return "Server WBC detection sedang berjalan, Telegram @WBCDetectorBot dapat digunakan."
 
 if __name__ == '__main__':
     Thread(target=start_bot).start()
