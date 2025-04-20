@@ -7,7 +7,7 @@ from PIL import Image
 import os
 
 #yang ini untuk konfigurasi botnya teman-teman alterians (telegram)
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("API_TELEGRAM")
 
 def start(update: Update, context: CallbackContext):
     update.message.reply_text("Halo! Kirimkan gambar sel darah putih, dan saya akan deteksi.")
