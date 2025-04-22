@@ -1,6 +1,4 @@
 from flask import Flask, request
-from telegram import Bot, Update
-from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackContext
 from detect import detect_white_blood_cells
 from PIL import Image
 import os
@@ -57,7 +55,7 @@ def webhook():
     return 'OK', 200
 
 # Setup webhook saat pertama kali dijalankan
-@app._got_first_request
+@app.before_first_request
 def setup_webhook():
     webhook_url = f"{WEBHOOK_URL}/{TOKEN}"
     bot.delete_webhook()
