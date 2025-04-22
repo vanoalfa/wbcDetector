@@ -4,3 +4,5 @@ requests
 Pillow
 roboflow
 python-dotenv
+firebase-admin
+gunicorn
