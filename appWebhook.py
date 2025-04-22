@@ -1,4 +1,6 @@
 from flask import Flask, request
+from telegram import Bot, Update
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackContext
 from detect import detect_white_blood_cells
 from PIL import Image
 import os
