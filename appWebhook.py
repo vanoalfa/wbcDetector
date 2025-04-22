@@ -66,7 +66,6 @@ def webhook():
     return 'OK', 200
 
 # Setup webhook saat pertama kali dijalankan
-@app.before_first_request
 def setup_webhook():
     webhook_url = f"{WEBHOOK_URL}/{TOKEN}"
     bot.delete_webhook()  # Hapus webhook sebelumnya jika ada
@@ -74,4 +73,5 @@ def setup_webhook():
 
 # Jalankan aplikasi Flask
 if __name__ == '__main__':
+    setup_webhook()  # Panggil fungsi setup webhook sebelum menjalankan app
     app.run(host='0.0.0.0', port=5000, debug=False)
