@@ -13,20 +13,6 @@ import os #Pustaka untuk mengakses environment variables
 
 #yang ini untuk konfigurasi botnya teman-teman alterians (telegram)
 TOKEN = os.environ.get("API_TELEGRAM") #ngambil API dari telegram
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
-
-#Pokoknya ini buat server flasknya
-app = Flask(__name__)
-#app adalah variabel yang akan digunakan untuk mengakses fungsi-fungsi dari Flask.
-#Flask(): adalah fungsi pada pustaka Flask yang digunakan untuk membuat objek aplikasi Flask.
-#__name__ adalah variabel khusus di Python yang berisi nama modul saat ini. Ketika modul dijalankan sebagai program utama, __name__ akan berisi '__main__'. Ketika modul diimpor sebagai modul lain, __name__ akan berisi nama modul tersebut.
-
-# Route untuk webhook (Telegram mengirimkan update ke sini)
-@app.route('/' + TOKEN, methods=["POST"])  # Webhook akan menerima POST request di URL /<token>
-def webhook(request):
-    update = Update.de_json(request.get_json(force=True), bot)  # Mengambil update JSON dari request dan mengonversi ke objek Update
-    dispatcher.process_update(update)  # Proses update dari Telegram menggunakan dispatcher
-    return 'OK'
 
 #Message awal
 def start(update: Update, context: CallbackContext): #jalan kalau user ketik /start nantinya
@@ -69,28 +55,23 @@ def handle_image(update: Update, context: CallbackContext): #fungsi untuk menang
 
 #disini main dari program botnya dimana program ini yang akan berjalan untuk menjalankan bot telegram
 def start_bot(): #fungsi untuk menjalankan bot telegram
-    # Set webhook Telegram untuk menerima updates
-    bot.set_webhook(url=WEBHOOK_URL + '/' + TOKEN)
-    dispatcher.start()
-    
-    ##updater = Updater(TOKEN, use_context=True) #menghubungkan bot dengan server Telegram
-    ##dp = updater.dispatcher #membuat objek dispatcher untuk menangani pesan dari user
+    updater = Updater(TOKEN, use_context=True) #menghubungkan bot dengan server Telegram
+    dp = updater.dispatcher #membuat objek dispatcher untuk menangani pesan dari user
     #dp adalah singkatan dari dispatcher yang merupakan objek yang digunakan untuk mengatur dan mengelola handler (fungsi) yang akan dipanggil saat pesan tertentu diterima.
     #updater.dispatcher : Mendapatkan objek dispatcher dari updater.
     #Dispatcher adalah objek yang mengatur dan mengelola handler (fungsi) yang akan dipanggil saat pesan tertentu diterima.
-    ##dp.add_handler(CommandHandler("start", start)) #menambahkan handler untuk perintah /start
-    ##dp.add_handler(MessageHandler(Filters.photo, handle_image)) #Jika user kirim gambar → jalankan handle_image().
+    dp.add_handler(CommandHandler("start", start)) #menambahkan handler untuk perintah /start
+    dp.add_handler(MessageHandler(Filters.photo, handle_image)) #Jika user kirim gambar → jalankan handle_image().
     #filters.photo : Menyaring pesan yang hanya berisi gambar.
     #handle_image : Fungsi yang akan dipanggil saat pesan gambar diterima.
-    ##updater.start_polling() #mulai bot telegram
-    ##updater.idle() #membuat bot tetap berjalan sampai diinterupsi secara manual
+    updater.start_polling() #mulai bot telegram
+    updater.idle() #membuat bot tetap berjalan sampai diinterupsi secara manual
 
-# Inisialisasi dispatcher untuk Telegram
-dispatcher = Dispatcher(bot, None)  # Tidak menggunakan Updater lagi, karena kita menggunakan webhook
-
-# Menambahkan handler untuk perintah /start dan foto
-dispatcher.add_handler(CommandHandler("start", start))
-dispatcher.add_handler(MessageHandler(Filters.photo, handle_image))
+#Pokoknya ini buat server flasknya
+app = Flask(__name__)
+#app adalah variabel yang akan digunakan untuk mengakses fungsi-fungsi dari Flask.
+#Flask(): adalah fungsi pada pustaka Flask yang digunakan untuk membuat 
+#__name__ adalah variabel khusus di Python yang berisi nama modul saat ini. dari refrensi: https://flask.palletsprojects.com/en/2.0.x/quickstart/#a-minimal-application.
 
 @app.route('/') #@app.route('/') adalah decorator yang digunakan untuk menentukan URL yang akan dipetakan ke fungsi home(). refrensinya: https://flask.palletsprojects.com/en/2.0.x/quickstart/#routing
 #kenapa '/'? karena ini adalah URL root dari server flask, yaitu URL yang akan dipetakan ke fungsi home() saat server flask dijalankan. misal kalau mau ditambah seperti: '/project' maka nanti urlnya akan membawa ke url halaman projectnya (urlnya akan menjadi https://<nama domain>/project).
@@ -98,6 +79,5 @@ def home():
     return "Server WBC detection sedang berjalan, Telegram @WBCDetectorBot dapat digunakan." #tampilan pada browser ketika server flask dijalankan
 
 if __name__ == '__main__': #ini buat menjalankan bot telegram dan server flask secara bersamaan karena __name__ == '__main__' berarti program ini sedang dijalankan sebagai program utama, bukan sebagai modul yang diimpor. diambil dari https://www.geeksforgeeks.org/__name__-special-variable-python/
-    #====Thread(target=start_bot).start() #menjalankan bot telegram
-    start_bot()  # Menjalankan bot Telegram dengan webhook
+    Thread(target=start_bot).start() #menjalankan bot telegram
     app.run(host='0.0.0.0', port=5000) #menjalankan server flask di port 5000 dan host 0.0.0.0 agar bisa diakses dari luar (dari internet).
