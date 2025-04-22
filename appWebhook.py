@@ -57,7 +57,7 @@ def webhook():
     return 'OK', 200
 
 # Setup webhook saat pertama kali dijalankan
-@app.before_first_request
+@app._got_first_request
 def setup_webhook():
     webhook_url = f"{WEBHOOK_URL}/{TOKEN}"
     bot.delete_webhook()
