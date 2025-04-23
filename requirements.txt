@@ -1,6 +1,5 @@
 flask
 python-telegram-bot
-urllib3==1.26.16
 requests
 Pillow
 roboflow
@@ -9,3 +8,4 @@ firebase-admin
 gunicorn
 telegram
 python-dotenv
+urllib3==1.26.16
