@@ -1,6 +1,6 @@
 from flask import Flask #Pustaka untuk server flask
 from threading import Thread #Pustaka untuk menjalankan bot telegram dan server flask secara bersamaan
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext #Pustaka untuk mengambil komponen yang dibutuhkan bot telegram
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext #Pustaka untuk mengambil komponen yang dibutuhkan bot telegram
 #Updater : Untuk menghubungkan bot dengan server Telegram.
 #CommandHandler : Untuk perintah /start atau perintah lain yang dikirimkan oleh pengguna.
 #MessageHandler : Untuk menangani pesan dari pengguna (contoh: gambar).
@@ -61,7 +61,7 @@ def start_bot(): #fungsi untuk menjalankan bot telegram
     #updater.dispatcher : Mendapatkan objek dispatcher dari updater.
     #Dispatcher adalah objek yang mengatur dan mengelola handler (fungsi) yang akan dipanggil saat pesan tertentu diterima.
     dp.add_handler(CommandHandler("start", start)) #menambahkan handler untuk perintah /start
-    dp.add_handler(MessageHandler(Filters.photo, handle_image)) #Jika user kirim gambar → jalankan handle_image().
+    dp.add_handler(MessageHandler(filters.photo, handle_image)) #Jika user kirim gambar → jalankan handle_image().
     #filters.photo : Menyaring pesan yang hanya berisi gambar.
     #handle_image : Fungsi yang akan dipanggil saat pesan gambar diterima.
     updater.start_polling() #mulai bot telegram
