@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request
 from telegram import Bot, Update
-from telegram.ext import Dispatcher, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackContext
 from detect import detect_white_blood_cells
 from PIL import Image
 from dotenv import load_dotenv
@@ -47,7 +47,7 @@ def handle_image(update: Update, context: CallbackContext):
 
 # Register handlers
 dispatcher.add_handler(CommandHandler("start", start))
-dispatcher.add_handler(MessageHandler(filters.PHOTO, handle_image))
+dispatcher.add_handler(MessageHandler(Filters.PHOTO, handle_image))
 
 # === Flask Routes ===
 
