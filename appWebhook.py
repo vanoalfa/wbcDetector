@@ -1,36 +1,34 @@
-import os
 from flask import Flask, request
-from telegram import Bot, Update
-from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from detect import detect_white_blood_cells
 from PIL import Image
+import os
 from dotenv import load_dotenv
+import asyncio
 
-# Load environment variables from .env
+# Load environment variables
 load_dotenv()
+TOKEN = os.getenv("API_TELEGRAM")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 # Initialize Flask app
 app = Flask(__name__)
 
-# Get token and webhook URL from environment
-TOKEN = os.getenv("API_TELEGRAM")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+# Global application object (from python-telegram-bot v20+)
+telegram_app = ApplicationBuilder().token(TOKEN).build()
 
-# Initialize bot and dispatcher
-bot = Bot(token=TOKEN)
-dispatcher = Dispatcher(bot=bot, update_queue=None, use_context=True)
+# Command /start handler
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Halo! Kirimkan gambar sel darah putih, dan saya akan bantu identifikasi.")
 
-# === Handlers ===
-
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("Halo! Kirimkan gambar sel darah putih, dan saya akan bantu identifikasi.")
-
-def handle_image(update: Update, context: CallbackContext):
-    photo = update.message.photo[-1].get_file()
+# Image handler
+async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    photo = await update.message.photo[-1].get_file()
     file_path = f"static/{photo.file_id}.jpg"
-    photo.download(file_path)
+    await photo.download_to_drive(file_path)
 
-    update.message.reply_text("Gambar sedang diproses...")
+    await update.message.reply_text("Gambar sedang diproses...")
 
     img = Image.open(file_path)
     img = img.resize((640, 640))
@@ -40,36 +38,36 @@ def handle_image(update: Update, context: CallbackContext):
 
     if result_path:
         with open(result_path, 'rb') as result_image:
-            update.message.reply_photo(photo=result_image, caption=result_message)
+            await update.message.reply_photo(photo=result_image, caption=result_message)
         os.remove(result_path)
     else:
-        update.message.reply_text(result_message)
+        await update.message.reply_text(result_message)
 
-# Register handlers
-dispatcher.add_handler(CommandHandler("start", start))
-dispatcher.add_handler(MessageHandler(Filters.PHOTO, handle_image))
+# Add handlers
+telegram_app.add_handler(CommandHandler("start", start))
+telegram_app.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
-# === Flask Routes ===
+# Webhook endpoint
+@app.route(f'/{TOKEN}', methods=['POST'])
+async def webhook():
+    data = request.get_json(force=True)
+    update = Update.de_json(data, telegram_app.bot)
+    await telegram_app.process_update(update)
+    return 'OK', 200
 
+# Home endpoint
 @app.route('/')
 def home():
-    return "WBC Webhook Server Aktif!", 200
+    return "WBC Webhook Server Aktif!"
 
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), bot)
-    dispatcher.process_update(update)
-    return "OK", 200
+# Set webhook
+@app.before_first_request
+def setup_webhook():
+    bot = Bot(token=TOKEN)
+    url = f"{WEBHOOK_URL}/{TOKEN}"
+    asyncio.run(bot.delete_webhook())
+    asyncio.run(bot.set_webhook(url=url))
 
-@app.route("/setwebhook", methods=["GET"])
-def set_webhook():
-    if not WEBHOOK_URL or not TOKEN:
-        return "Missing environment variable", 500
-    webhook_url = f"{WEBHOOK_URL}/{TOKEN}"
-    bot.delete_webhook()
-    success = bot.set_webhook(url=webhook_url)
-    return f"Webhook set: {success}", 200
-
-# === App Export ===
-if __name__ == "__main__":
-    app.run(debug=True)
+# Run Flask app
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
