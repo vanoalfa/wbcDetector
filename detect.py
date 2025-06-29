@@ -10,7 +10,7 @@ if not api_key: #Jika API_ROBOFLOW belum di-set di environment variables, maka a
 rf = Roboflow(api_key=api_key) #Inisialisasi Roboflow dengan API key yang sudah di-set di environment variables
 #rf: variabel yang akan digunakan untuk mengakses fungsi-fungsi dari Roboflow.
 project = rf.workspace().project("blood-cell-classification-juuw1") #Ambil project dari Roboflow workspace
-model = project.version("2").model #versi model yang digunakan
+model = project.version("4").model #versi model yang digunakan
 
 #Fungsi untuk mendeteksi sel darah putih, fungsi ini akan dipanggil dari app.py
 def detect_white_blood_cells(image_path):
@@ -19,6 +19,7 @@ def detect_white_blood_cells(image_path):
         prediction = model.predict(image_path).json() #Mengirim gambar ke Roboflow untuk diprediksi
         #.json() ditambahkan karena hasil prediksi dari Roboflow adalah dalam bentuk json, jadi harus diubah dulu ke json baru kemudian bisa diproses oleh python.
         detections = prediction['predictions'] #Ambil hasil prediksi dari json yang sudah diubah ke python
+        detections = [det for det in detections if det['confidence'] * 100 >= 65] #Filter deteksi yang confidence-nya di atas 65%
 
         if len(detections) == 0: #Jika tidak ada sel darah putih yang terdeteksi
             return None, "Tidak ditemukan sel darah putih pada gambar." #maka akan mengirimkan pesan ke user bahwa tidak ada sel darah putih yang terdeteksi
@@ -41,6 +42,7 @@ def detect_white_blood_cells(image_path):
             class_name = det['class'] #ambil nama class dari roboflow
             #det['class']: Nama class dari deteksi sel yang ada di gambar, diambil dari json yang sudah diubah ke python.]
             confidence = det['confidence'] * 100  #Ubah confidence dari desimal ke persen
+
             total_confidence += confidence #Tambahkan confidence ke total confidence
 
             #Hitung jumlah class
